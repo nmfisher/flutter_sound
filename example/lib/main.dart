@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
@@ -58,10 +59,14 @@ class _MyAppState extends State<MyApp> {
 
   void _initializeExample(FlutterSound module) async {
     flutterSoundModule = module;
+    
     flutterSoundModule.initializeMediaPlayer();
-    flutterSoundModule.setSubscriptionDuration(0.01);
-    flutterSoundModule.setDbPeakLevelUpdate(0.8);
-    flutterSoundModule.setDbLevelEnabled(true);
+    if(!kIsWeb) {
+      flutterSoundModule.setSubscriptionDuration(0.01);
+      flutterSoundModule.setDbPeakLevelUpdate(0.8);
+      flutterSoundModule.setDbLevelEnabled(true);  
+    };
+    
     initializeDateFormatting();
     setCodec(_codec);
     setDuck();
@@ -105,14 +110,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> setDuck() async {
-    if (_duckOthers) {
-      if (Platform.isIOS)
-        await flutterSoundModule.iosSetCategory(t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD, t_IOS_SESSION_MODE.DEFAULT, IOS_DUCK_OTHERS | IOS_DEFAULT_TO_SPEAKER);
-      else if (Platform.isAndroid) await flutterSoundModule.androidAudioFocusRequest(ANDROID_AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+    if(kIsWeb) {
+
     } else {
-      if (Platform.isIOS)
-        await flutterSoundModule.iosSetCategory(t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD, t_IOS_SESSION_MODE.DEFAULT, IOS_DEFAULT_TO_SPEAKER);
-      else if (Platform.isAndroid) await flutterSoundModule.androidAudioFocusRequest(ANDROID_AUDIOFOCUS_GAIN);
+      if (_duckOthers) {
+        if (Platform.isIOS)
+          await flutterSoundModule.iosSetCategory(t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD, t_IOS_SESSION_MODE.DEFAULT, IOS_DUCK_OTHERS | IOS_DEFAULT_TO_SPEAKER);
+        else if (Platform.isAndroid) await flutterSoundModule.androidAudioFocusRequest(ANDROID_AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+      } else {
+        if (Platform.isIOS)
+          await flutterSoundModule.iosSetCategory(t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD, t_IOS_SESSION_MODE.DEFAULT, IOS_DEFAULT_TO_SPEAKER);
+        else if (Platform.isAndroid) await flutterSoundModule.androidAudioFocusRequest(ANDROID_AUDIOFOCUS_GAIN);
+      }
     }
   }
 
@@ -141,23 +150,24 @@ class _MyAppState extends State<MyApp> {
 
   void startRecorder() async {
     try {
-      // String path = await flutterSoundModule.startRecorder
-      // (
-      //   paths[_codec.index],
-      //   codec: _codec,
-      //   sampleRate: 16000,
-      //   bitRate: 16000,
-      //   numChannels: 1,
-      //   androidAudioSource: AndroidAudioSource.MIC,
-      // );
-      Directory tempDir = await getTemporaryDirectory();
-
-      String path = await flutterSoundModule.startRecorder(
-        uri: '${tempDir.path}/${paths[_codec.index]}',
+      if(kIsWeb) {
+        await flutterSoundModule.startRecorder(
         codec: _codec,
+        sampleRate: 16000,
+        bitRate: 16000,
+        numChannels: 1,
       );
-      print('startRecorder: $path');
+      } else {
+        Directory tempDir = await getTemporaryDirectory();
 
+        String path = await flutterSoundModule.startRecorder(
+          uri: '${tempDir.path}/${paths[_codec.index]}',
+          codec: _codec,
+        );
+        this._path[_codec.index] = path;
+        print('startRecorder: $path');
+      }
+      
       _recorderSubscription = flutterSoundModule.onRecorderStateChanged.listen((e) {
         DateTime date = new DateTime.fromMillisecondsSinceEpoch(e.currentPosition.toInt(), isUtc: true);
         String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
@@ -175,10 +185,10 @@ class _MyAppState extends State<MyApp> {
 
       this.setState(() {
         this._isRecording = true;
-        this._path[_codec.index] = path;
       });
-    } catch (err) {
+    } catch (err, st) {
       print('startRecorder error: $err');
+      print(st);
       setState(() {
         stopRecorder();
         this._isRecording = false;
@@ -196,7 +206,7 @@ class _MyAppState extends State<MyApp> {
 
   void stopRecorder() async {
     try {
-      String result = await flutterSoundModule.stopRecorder();
+      String result = await flutterSoundModule.stopRecorder(true);
       print('stopRecorder: $result');
       cancelRecorderSubscriptions();
     } catch (err) {
@@ -465,6 +475,8 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
+        Text("Encoder Supported : $_encoderSupported"),
+        Text("Decoder Supported : $_decoderSupported"),
       ],
     );
 
@@ -521,11 +533,16 @@ class _MyAppState extends State<MyApp> {
   void startStopRecorder() {
     if (flutterSoundModule.audioState == t_AUDIO_STATE.IS_RECORDING)
       stopRecorder();
-    else
+    else {
+      print("starting recorder");
       startRecorder();
+    }
+      
+
   }
 
   onStartRecorderPressed() {
+    print(_media);
     if (_media == t_MEDIA.ASSET || _media == t_MEDIA.BUFFER || _media == t_MEDIA.REMOTE_EXAMPLE_FILE) return null;
     // Disable the button if the selected codec is not supported
     if (!_encoderSupported) return null;

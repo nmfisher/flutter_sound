@@ -6,6 +6,7 @@ homepage: https://github.com/dooboolab/flutter_sound
 environment:
     sdk: ">=1.19.0 <3.0.0"
 dependencies:
+  js: ^0.6.0
   path_provider: ">=1.0.0 <2.0.0"
   path: ">=1.0.0 <2.0.0"
   flutter:
@@ -18,11 +19,17 @@ dependencies:
 # The following section is specific to Flutter.
 flutter:
   plugin:
-    androidPackage: com.dooboolab.fluttersound
-    pluginClass: FlutterSoundPlugin
+    platforms:
+      android:
+        package: com.dooboolab.fluttersound
+        pluginClass: FlutterSoundPlugin
+      web:
+        pluginClass: FlutterSoundWebPlugin
+        fileName: flutter_sound_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
-  # assets:
+  assets:
+    - packages/flutter_sound/js/recorder.js
   #  - images/a_dot_burr.jpeg
   #  - images/a_dot_ham.jpeg
   #
