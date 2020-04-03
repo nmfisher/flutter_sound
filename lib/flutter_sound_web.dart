@@ -54,8 +54,6 @@ class FlutterSoundWebPlugin  {
     final FlutterSoundWebPlugin instance = FlutterSoundWebPlugin();
     _channel.setMethodCallHandler(instance.handleMethodCall);
 
-    print("registering");
-
     _recorder = Recorder(allowInterop((sampleRate) {
       _sampleRate = sampleRate;
       _channel.invokeMethod("initialized", sampleRate);

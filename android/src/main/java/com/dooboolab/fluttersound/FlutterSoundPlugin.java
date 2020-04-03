@@ -216,11 +216,11 @@ public class FlutterSoundPlugin implements MethodCallHandler, AudioInterface, Fl
 
         @Override
         public void onMethodCall( final MethodCall call, final Result result) {
-                final String path = call.argument("path");
+                String path;
                 switch (call.method) {
-
                         case "initializeMediaPlayer":
-                                 result.success(true);
+                                result.success(true);
+                                getChannel().invokeMethod("initialized", null);
                                 break;
 
                         case "releaseMediaPlayer":
@@ -248,6 +248,8 @@ public class FlutterSoundPlugin implements MethodCallHandler, AudioInterface, Fl
                         }
                                 break;
                         case "startRecorder":
+                                path = call.argument("path");
+
                                 taskScheduler.submit(() -> {
                                         Integer sampleRate = call.argument("sampleRate");
                                         Integer numChannels = call.argument("numChannels");
@@ -266,6 +268,8 @@ public class FlutterSoundPlugin implements MethodCallHandler, AudioInterface, Fl
                                 break;
 
                         case "startPlayer":
+                                path = call.argument("path");
+
                                 this.startPlayer(path, result);
                                 break;
 

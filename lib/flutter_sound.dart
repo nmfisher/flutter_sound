@@ -465,6 +465,19 @@ class FlutterSound {
     }
   }
 
+  void requestPermissions() async {
+    if (!kIsWeb) {
+      // Request Microphone permission if needed
+      Map<PermissionGroup, PermissionStatus> permission =
+          await PermissionHandler()
+              .requestPermissions([PermissionGroup.microphone]);
+      if (permission[PermissionGroup.microphone] != PermissionStatus.granted)
+        throw new Exception("Microphone permission not granted");
+    }
+  }
+
+  String _currentUri;
+
   Future<String> startRecorder({
     String uri,
     int sampleRate = 16000,
@@ -484,15 +497,8 @@ class FlutterSound {
     if (!await isEncoderSupported(codec))
       throw new RecorderRunningException('Codec not supported.');
 
-    if (!kIsWeb) {
-      // Request Microphone permission if needed
-      Map<PermissionGroup, PermissionStatus> permission =
-          await PermissionHandler()
-              .requestPermissions([PermissionGroup.microphone]);
-      if (permission[PermissionGroup.microphone] != PermissionStatus.granted)
-        throw new Exception("Microphone permission not granted");
-      if (uri == null) uri = await defaultPath(codec);
-    }
+    if (uri == null) uri = await defaultPath(codec);
+    _currentUri = uri;
 
     // If we want to record OGG/OPUS on iOS, we record with CAF/OPUS and we remux the CAF file format to a regular OGG/OPUS.
     // We use FFmpeg for that task.
@@ -503,9 +509,11 @@ class FlutterSound {
       isOppOpus = true;
       codec = t_CODEC.CODEC_CAF_OPUS;
       Directory tempDir = await getTemporaryDirectory();
+      print("got tempdir $tempDir");
       File fout = File('${tempDir.path}/flutter_sound-tmp.caf');
       if (fout.existsSync()) // delete the old temporary file if it exists
         await fout.delete();
+      print("got tempfile ${fout.path}");
       uri = fout.path;
       tmpUri = uri;
     } else
@@ -537,13 +545,33 @@ class FlutterSound {
     }
   }
 
+
+  // In this simple example, we just load a file in memory.This is stupid but just for demonstration  of startPlayerFromBuffer()
+  Future<Uint8List> makeBuffer(String path) async {
+    try {
+      if (!await File(path).exists()) return null;
+      File file = File(path);
+      file.openRead();
+      var contents = await file.readAsBytes();
+      print('The file is ${contents.length} bytes long.');
+      return contents;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
   Future<String> stopRecorder([bool export]) async {
     
-    // _recorder.stop(true);
-
     String result = await getChannel().invokeMethod('stopRecorder', export);
 
     audioState = t_AUDIO_STATE.IS_STOPPED;
+
+    if(!kIsWeb) {
+      var buffer = await makeBuffer(_currentUri);
+      _onRecordedDataAvailableController.sink.add(buffer);
+      _onRecordingSuccessfullyCompleteController.add(true);
+    }
 
     _removeRecorderCallback();
     _removeDbPeakCallback();
@@ -656,7 +684,10 @@ class FlutterSound {
   }) async {
     if (kIsWeb) {
       _channel.invokeMethod("playFromBuffer");
+      whenFinished();
+      return "done";
     }
+
     // If we want to play OGG/OPUS on iOS, we need to remux the OGG file format to a specific Apple CAF envelope before starting the player.
     // We write the data in a temporary file before calling ffmpeg.
     if ((codec == t_CODEC.CODEC_OPUS) && (Platform.isIOS)) {

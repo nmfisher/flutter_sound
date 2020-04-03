@@ -15,6 +15,8 @@ dependencies:
   flutter_sound:
     path: ../
   permission_handler: ^4.4.0
+  flutter_web_plugins:
+    sdk: flutter
 
 # Comment out the following line if flutter_ffmpeg is not needed
   flutter_ffmpeg: ^0.2.10
@@ -69,8 +71,7 @@ flutter:
   - res/icons/3.0x/ic_volume_up.png
 
   - assets/samples/
-
-
+  - packages/flutter_sound/js/recorder.js
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
 

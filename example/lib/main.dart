@@ -542,7 +542,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   onStartRecorderPressed() {
-    print(_media);
     if (_media == t_MEDIA.ASSET || _media == t_MEDIA.BUFFER || _media == t_MEDIA.REMOTE_EXAMPLE_FILE) return null;
     // Disable the button if the selected codec is not supported
     if (!_encoderSupported) return null;
