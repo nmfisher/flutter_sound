@@ -497,14 +497,13 @@ class FlutterSound {
     if (!await isEncoderSupported(codec))
       throw new RecorderRunningException('Codec not supported.');
 
-    if (uri == null) uri = await defaultPath(codec);
-    _currentUri = uri;
-
     // If we want to record OGG/OPUS on iOS, we record with CAF/OPUS and we remux the CAF file format to a regular OGG/OPUS.
     // We use FFmpeg for that task.
     if (!kIsWeb &&
         Platform.isIOS &&
         ((codec == t_CODEC.CODEC_OPUS) || (fileExtension(uri) == '.opus'))) {
+      if (uri == null) uri = await defaultPath(codec);
+      _currentUri = uri;
       savedUri = uri;
       isOppOpus = true;
       codec = t_CODEC.CODEC_CAF_OPUS;
