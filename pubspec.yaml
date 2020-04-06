@@ -20,6 +20,8 @@ dependencies:
 flutter:
   plugin:
     platforms:
+      ios:
+        pluginClass: FlutterSoundPlugin
       android:
         package: com.dooboolab.fluttersound
         pluginClass: FlutterSoundPlugin
