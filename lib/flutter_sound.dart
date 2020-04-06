@@ -198,6 +198,7 @@ class FlutterSound {
       _setRecorderCallback();
       await getChannel().invokeMethod('initializeMediaPlayer');
       isInited = true;
+      print("Media player initialized.");
     }
   }
 
