@@ -519,6 +519,8 @@ class FlutterSound {
       } 
     }
 
+    print("Recording will be saved at uri: $uri");
+
     try {
       var param = <String, dynamic>{
         'path': uri,
