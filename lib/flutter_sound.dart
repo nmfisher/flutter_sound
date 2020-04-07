@@ -494,26 +494,30 @@ class FlutterSound {
     if (!await isEncoderSupported(codec))
       throw new RecorderRunningException('Codec not supported.');
 
-    // If we want to record OGG/OPUS on iOS, we record with CAF/OPUS and we remux the CAF file format to a regular OGG/OPUS.
-    // We use FFmpeg for that task.
-    if (!kIsWeb &&
-        Platform.isIOS &&
-        ((codec == t_CODEC.CODEC_OPUS) || (fileExtension(uri) == '.opus'))) {
+    isOppOpus = false;
+
+    if(kIsWeb) {
+      // nothing
+    } else {
       if (uri == null) uri = await defaultPath(codec);
-      _currentUri = uri;
-      savedUri = uri;
-      isOppOpus = true;
-      codec = t_CODEC.CODEC_CAF_OPUS;
-      Directory tempDir = await getTemporaryDirectory();
-      print("got tempdir $tempDir");
-      File fout = File('${tempDir.path}/flutter_sound-tmp.caf');
-      if (fout.existsSync()) // delete the old temporary file if it exists
-        await fout.delete();
-      print("got tempfile ${fout.path}");
-      uri = fout.path;
-      tmpUri = uri;
-    } else
-      isOppOpus = false;
+      // If we want to record OGG/OPUS on iOS, we record with CAF/OPUS and we remux the CAF file format to a regular OGG/OPUS.
+      // We use FFmpeg for that task.
+      if (Platform.isIOS &&
+        ((codec == t_CODEC.CODEC_OPUS) || (fileExtension(uri) == '.opus'))) {
+        _currentUri = uri;
+        savedUri = uri;
+        isOppOpus = true;
+        codec = t_CODEC.CODEC_CAF_OPUS;
+        Directory tempDir = await getTemporaryDirectory();
+        print("got tempdir $tempDir");
+        File fout = File('${tempDir.path}/flutter_sound-tmp.caf');
+        if (fout.existsSync()) // delete the old temporary file if it exists
+          await fout.delete();
+        print("got tempfile ${fout.path}");
+        uri = fout.path;
+        tmpUri = uri;
+      } 
+    }
 
     try {
       var param = <String, dynamic>{
