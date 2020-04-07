@@ -183,10 +183,6 @@ class FlutterSound {
 
   MethodChannel getChannel() => _channel;
 
-  FlutterSound() {
-    initializeMediaPlayer();
-  }
-
   Future<String> defaultPath(t_CODEC codec) async {
     Directory tempDir = await getTemporaryDirectory();
     File fout = File('${tempDir.path}/${defaultPaths[codec.index]}');
