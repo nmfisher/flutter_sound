@@ -247,7 +247,7 @@ if ([@"startRecorder" isEqualToString:call.method]) {
     [self startRecorder:path:[NSNumber numberWithInt:numChannels]:[NSNumber numberWithInt:sampleRate]:coder:iosQuality:bitRate result:result];
     
   } else if ([@"initializeMediaPlayer" isEqualToString:call.method]) {
-    [[ self getChannel] invokeMethod:@"initialized" arguments:nil];
+    [[ self getChannel] invokeMethod:@"initialized" arguments:NSNull];
     result(@"initialized!");
   } else if ([@"releaseMediaPlayer" isEqualToString:call.method]) {
 
