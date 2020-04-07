@@ -521,30 +521,27 @@ class FlutterSound {
 
     print("Recording will be saved at uri: $uri");
 
-    try {
-      var param = <String, dynamic>{
-        'path': uri,
-        'sampleRate': sampleRate,
-        'numChannels': numChannels,
-        'bitRate': bitRate,
-        'codec': codec.index,
-        'androidEncoder': androidEncoder?.value,
-        'androidAudioSource': androidAudioSource?.value,
-        'androidOutputFormat': androidOutputFormat?.value,
-        'iosQuality': iosQuality?.value
-      };
+    var param = <String, dynamic>{
+      'path': uri,
+      'sampleRate': sampleRate,
+      'numChannels': numChannels,
+      'bitRate': bitRate,
+      'codec': codec.index,
+      'androidEncoder': androidEncoder?.value,
+      'androidAudioSource': androidAudioSource?.value,
+      'androidOutputFormat': androidOutputFormat?.value,
+      'iosQuality': iosQuality?.value
+    };
 
-      String result = await getChannel().invokeMethod('startRecorder', param);
-      _setRecorderCallback();
-      audioState = t_AUDIO_STATE.IS_RECORDING;
-      // if the caller wants OGG/OPUS we must remux the temporary file
-      if ((result != null) && isOppOpus) {
-        return savedUri;
-      }
-      return result;
-    } catch (err) {
-      throw new Exception(err);
+    String result = await getChannel().invokeMethod('startRecorder', param);
+    print("Invoked startRecorder, results was $result");
+    _setRecorderCallback();
+    audioState = t_AUDIO_STATE.IS_RECORDING;
+    // if the caller wants OGG/OPUS we must remux the temporary file
+    if ((result != null) && isOppOpus) {
+      return savedUri;
     }
+    return result;
   }
 
 
